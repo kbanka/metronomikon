@@ -10,7 +10,7 @@ clean:
 	rm -f $(BINARY)
 
 $(BINARY): $(shell find -name '*.go')
-	go build -o $(BINARY)
+	GOOS=linux CGO_ENABLED=0 go build -o $(BINARY)
 
 run:
 	go run $(BINARY).go
