@@ -46,3 +46,8 @@ func (a *Api) init(debug bool) {
 func (a *Api) Start() {
 	a.engine.Run()
 }
+
+// Output HTTP 500 with JSON body containing error message
+func JsonError(c *gin.Context, message string) {
+	c.JSON(500, gin.H{"message": message})
+}

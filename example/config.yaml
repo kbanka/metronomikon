@@ -1,0 +1,23 @@
+# Example configuration file for Metronomikon
+# These values correspond to the hard-coded default config
+---
+# Configuration for Kubernetes
+kubernetes:
+  namespace:
+    # List of namespaces to ignore
+    blacklist:
+      - kube-system
+    # Uncomment and populate to specify a particular list of namespaces to look in
+    #whitelist:
+    #  - default
+    #  - my_namespace
+  # Default values used when creating a Kubernetes CronJob when values are not provided
+  jobDefaults: {}
+
+# Configuration for Metronome
+metronome:
+  # Default values used when creating a Metronome job spec when values are not provided
+  jobDefaults:
+    memory: 256
+    disk: 10
+    cpus: 1.0
