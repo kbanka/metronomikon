@@ -1,22 +1,11 @@
-BINARY=metronomikon
+SRCDIR=src
 
-.phony: all build clean run test
+.PHONY: all image
 
-all: build
+all: image
 
-build: $(BINARY)
+image: build
+	docker build -t applause/metronomikon:latest .
 
-clean:
-	rm -f $(BINARY)
-
-$(BINARY): $(shell find -name '*.go')
-	GOOS=linux CGO_ENABLED=0 go build -o $(BINARY)
-
-run:
-	go run $(BINARY).go
-
-test:
-	find -type f -name '*_test.go' | xargs -r dirname | sort -u | while read package; do \
-		echo $$package; \
-		go test -v $$package || exit 1; \
-	done
+%:
+	$(MAKE) -C $(SRCDIR) $@
