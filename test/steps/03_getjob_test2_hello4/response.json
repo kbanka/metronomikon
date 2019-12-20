@@ -1,0 +1,1 @@
+{"id":"metronomikon-test2.hello4","run":{"args":["/bin/sh","-c","date; echo Hello from the Kubernetes cluster hello4"],"cpus":1,"disk":5,"docker":{"image":"busybox"},"mem":512,"placement":{},"restart":{}}}

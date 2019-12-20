@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: metronomikon
+  namespace: metronomikon-test
+data:
+  config.yaml: |
+    kubernetes:
+      namespace:
+        whitelist:
+          - metronomikon-test1
+          - metronomikon-test2
+    metronome:
+      jobDefaults:
+        memory: 512
+        disk: 5
