@@ -1,0 +1,7 @@
+{
+	"name": "getjob_test2_hello4",
+	"urlPath": "/v1/jobs/metronomikon-test2.hello4",
+	"method": "GET",
+	"responseCode": 200,
+	"responseJsonFile": "response.json"
+}

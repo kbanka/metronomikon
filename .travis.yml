@@ -1,5 +1,7 @@
 language: go
 
+sudo: required
+
 go:
   - 1.12.x
 
@@ -7,5 +9,13 @@ env:
   - GO111MODULE=on
 
 script:
+  # Download/run k3s
+  - sudo curl -Lo /usr/local/bin/k3s https://github.com/rancher/k3s/releases/download/v1.0.0/k3s && sudo chmod a+x /usr/local/bin/k3s
+  - sudo ln -s k3s /usr/local/bin/kubectl
+  - sudo k3s server --docker --write-kubeconfig-mode 0644 &>/dev/null &
+  # Build
   - make test
   - make build
+  - make image
+  # Run functional tests
+  - make functest

@@ -1,0 +1,7 @@
+{
+	"name": "getjobs",
+	"urlPath": "/v1/jobs",
+	"method": "GET",
+	"responseCode": 200,
+	"responseJsonFile": "response.json"
+}
