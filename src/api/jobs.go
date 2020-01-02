@@ -53,5 +53,16 @@ func handleUpdateJob(c *gin.Context) {
 }
 
 func handleDeleteJob(c *gin.Context) {
-	c.String(200, "TODO")
+	jobId := c.Param("jobid")
+	namespace, name, err := helpers.SplitMetronomeJobId(jobId)
+	if err != nil {
+		JsonError(c, err.Error())
+		return
+	}
+	cronJobDeleted, err := kube.DeleteCronJob(namespace, name)
+	if err != nil {
+		JsonError(c, fmt.Sprintf("failed to delete job: %s", err))
+		return
+	}
+	c.String(200, cronJobDeleted)
 }

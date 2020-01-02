@@ -6,6 +6,15 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+// Delete specific CronJob
+func DeleteCronJob(namespace string, name string) (string, error) {
+	err := client.BatchV1beta1().CronJobs(namespace).Delete(name, &metav1.DeleteOptions{})
+	if err != nil {
+		return "false", fmt.Errorf("could not delete CronJob: %s", err)
+	}
+	return "true", nil
+}
+
 // Return all CronJobs in a namespace
 func GetCronJobs(namespace string) ([]v1beta1.CronJob, error) {
 	jobs, err := client.BatchV1beta1().CronJobs(namespace).List(metav1.ListOptions{})

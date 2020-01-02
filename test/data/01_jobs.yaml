@@ -78,3 +78,23 @@ spec:
             - -c
             - date; echo Hello from the Kubernetes cluster hello4
           restartPolicy: OnFailure
+---
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: hello5
+  namespace: metronomikon-test3
+spec:
+  schedule: "*/1 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: hello
+            image: busybox
+            args:
+            - /bin/sh
+            - -c
+            - date; echo Hello from the Kubernetes cluster hello5
+          restartPolicy: OnFailure
