@@ -4,7 +4,6 @@ COPY src/ /app/
 RUN make build
 
 FROM alpine:3.10
-WORKDIR /app
-COPY --from=0 /app/metronomikon /app/
+COPY --from=0 /app/metronomikon /bin/
 COPY example/config.yaml /etc/metronomikon/config.yaml
-ENTRYPOINT ["/app/metronomikon"]
+ENTRYPOINT ["metronomikon"]
