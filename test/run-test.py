@@ -59,7 +59,7 @@ TEST_DIR = sys.argv[2]
 
 test_data = json.load(open('%s/metadata.json' % TEST_DIR))
 
-retries = test_data.get('retries', 1)
+retries = test_data.get('retries', 0)
 
 print('Running test step "%s"...' % test_data['name'])
 
@@ -67,7 +67,7 @@ url = '%s%s' % (ENDPOINT, test_data['urlPath'])
 
 print('Performing %s request against URL %s' % (test_data['method'], url))
 
-for i in range(retries):
+for i in range(retries + 1):
     if perform_request(test_data, url):
         sys.exit(0)
     print("Try %s in %s failed" % (i+1, retries))
