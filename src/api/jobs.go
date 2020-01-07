@@ -53,5 +53,26 @@ func handleUpdateJob(c *gin.Context) {
 }
 
 func handleDeleteJob(c *gin.Context) {
-	c.String(200, "TODO")
+	jobId := c.Param("jobid")
+	namespace, name, err := helpers.SplitMetronomeJobId(jobId)
+	if err != nil {
+		JsonError(c, err.Error())
+		return
+	}
+
+	job, err := kube.DeleteCronJob(namespace, name)
+	if job == nil {
+		var msg struct {
+			message string `json:message`
+		}
+		msg.message = fmt.Sprintf("Job '%s' does not exist", jobId)
+		c.JSON(404, msg)
+		return
+	} else if err != nil {
+		JsonError(c, fmt.Sprintf("failed to delete job: %s", err))
+		return
+	}
+
+	tmp_job := helpers.JobKubernetesToMetronome(job)
+	c.JSON(200, tmp_job)
 }

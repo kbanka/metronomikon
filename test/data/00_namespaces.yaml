@@ -13,3 +13,8 @@ apiVersion: v1
 kind: Namespace
 metadata:
   name: metronomikon-test2
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: metronomikon-test3

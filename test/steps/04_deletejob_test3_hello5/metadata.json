@@ -1,0 +1,7 @@
+{
+	"name": "deletejob_test3_hello5",
+	"urlPath": "/v1/jobs/metronomikon-test3.hello5",
+	"method": "DELETE",
+	"responseCode": 200,
+	"responseJsonFile": "response.json"
+}
