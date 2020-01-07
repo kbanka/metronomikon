@@ -70,6 +70,6 @@ print('Performing %s request against URL %s' % (test_data['method'], url))
 for i in range(retries + 1):
     if perform_request(test_data, url):
         sys.exit(0)
-    print("Try %s in %s failed" % (i+1, retries))
+    print("Try %s in %s failed" % (i+1, retries + 1 ))
     time.sleep(1)
 sys.exit(1)

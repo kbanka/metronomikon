@@ -3,5 +3,5 @@
 	"urlPath": "/v1/jobs/metronomikon-test3.hello5",
 	"method": "DELETE",
 	"responseCode": 200,
-	"responseText": "true"
+	"responseJsonFile": "response.json"
 }

@@ -7,12 +7,19 @@ import (
 )
 
 // Delete specific CronJob
-func DeleteCronJob(namespace string, name string) (string, error) {
-	err := client.BatchV1beta1().CronJobs(namespace).Delete(name, &metav1.DeleteOptions{})
+// Returns nil and error when job doesn't exist
+// Return job and error when deleting job failed
+// Return job and nil when deletion succeeded
+func DeleteCronJob(namespace string, name string) (*v1beta1.CronJob, error) {
+	job, err := GetCronJob(namespace, name)
 	if err != nil {
-		return "false", fmt.Errorf("could not delete CronJob: %s", err)
+		return nil, err
 	}
-	return "true", nil
+	err = client.BatchV1beta1().CronJobs(namespace).Delete(name, &metav1.DeleteOptions{})
+	if err != nil {
+		return job, err
+	}
+	return job, nil
 }
 
 // Return all CronJobs in a namespace

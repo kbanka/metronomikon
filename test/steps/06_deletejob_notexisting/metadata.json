@@ -1,0 +1,6 @@
+{
+	"name": "deletejob_notexisting",
+	"urlPath": "/v1/jobs/notexisting.notexisting",
+	"method": "DELETE",
+	"responseCode": 404
+}
