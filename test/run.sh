@@ -47,8 +47,8 @@ get_endpoint() {
 
 run_tests() {
 	get_endpoint
-	for i in $(ls -1 ${BASEDIR}/steps | sort); do
-		${BASEDIR}/run-test.py ${ENDPOINT} ${BASEDIR}/steps/${i} || die "test step failed"
+	for i in $(ls -1 ${BASEDIR}/tests | sort); do
+		${BASEDIR}/run-test.py ${ENDPOINT} ${BASEDIR}/tests/${i} || die "test step failed"
 	done
 }
 

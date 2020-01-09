@@ -48,6 +48,6 @@ func (a *Api) Start() {
 }
 
 // Output HTTP 500 with JSON body containing error message
-func JsonError(c *gin.Context, message string) {
-	c.JSON(500, gin.H{"message": message})
+func JsonError(c *gin.Context, statusCode int, message string) {
+	c.JSON(statusCode, gin.H{"message": message})
 }
