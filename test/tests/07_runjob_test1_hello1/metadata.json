@@ -1,0 +1,22 @@
+{
+	"steps": [
+		{
+			"name": "runjob_test1_hello1_start",
+			"urlPath": "/v1/jobs/metronomikon-test1.hello1/runs",
+			"method": "POST",
+			"responseCode": 201,
+			"useRegex": true,
+			"preserveKeys": true,
+			"responseJsonFile": "response.json"
+		},
+		{
+			"name": "runjob_test1_hello1_get",
+			"urlPath": "/v1/jobs/metronomikon-test1.hello1/runs/${id}",
+			"method": "GET",
+			"responseCode": 200,
+			"useRegex": true,
+			"retries": 10,
+			"responseJsonFile": "response2.json"
+		}
+	]
+}

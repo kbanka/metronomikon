@@ -11,17 +11,17 @@ func handleGetJobs(c *gin.Context) {
 	ret := []*helpers.MetronomeJob{}
 	namespaces, err := kube.GetNamespaces()
 	if err != nil {
-		JsonError(c, fmt.Sprintf("Failed to list namespaces: %s", err))
+		JsonError(c, 500, fmt.Sprintf("Failed to list namespaces: %s", err))
 		return
 	}
 	for _, namespace := range namespaces {
 		jobs, err := kube.GetCronJobs(namespace)
 		if err != nil {
-			JsonError(c, fmt.Sprintf("Failed to list jobs: %s", err))
+			JsonError(c, 500, fmt.Sprintf("Failed to list jobs: %s", err))
 			return
 		}
 		for _, job := range jobs {
-			tmp_job := helpers.JobKubernetesToMetronome(&job)
+			tmp_job := helpers.CronJobKubernetesToMetronome(&job)
 			ret = append(ret, tmp_job)
 		}
 	}
@@ -36,15 +36,15 @@ func handleGetJob(c *gin.Context) {
 	jobId := c.Param("jobid")
 	namespace, name, err := helpers.SplitMetronomeJobId(jobId)
 	if err != nil {
-		JsonError(c, err.Error())
+		JsonError(c, 500, err.Error())
 		return
 	}
 	job, err := kube.GetCronJob(namespace, name)
 	if err != nil {
-		JsonError(c, fmt.Sprintf("cannot retrieve job: %s", err))
+		JsonError(c, 404, fmt.Sprintf("cannot retrieve job: %s", err))
 		return
 	}
-	tmp_job := helpers.JobKubernetesToMetronome(job)
+	tmp_job := helpers.CronJobKubernetesToMetronome(job)
 	c.JSON(200, tmp_job)
 }
 
@@ -56,7 +56,7 @@ func handleDeleteJob(c *gin.Context) {
 	jobId := c.Param("jobid")
 	namespace, name, err := helpers.SplitMetronomeJobId(jobId)
 	if err != nil {
-		JsonError(c, err.Error())
+		JsonError(c, 500, err.Error())
 		return
 	}
 
@@ -69,10 +69,10 @@ func handleDeleteJob(c *gin.Context) {
 		c.JSON(404, msg)
 		return
 	} else if err != nil {
-		JsonError(c, fmt.Sprintf("failed to delete job: %s", err))
+		JsonError(c, 500, fmt.Sprintf("failed to delete job: %s", err))
 		return
 	}
 
-	tmp_job := helpers.JobKubernetesToMetronome(job)
+	tmp_job := helpers.CronJobKubernetesToMetronome(job)
 	c.JSON(200, tmp_job)
 }

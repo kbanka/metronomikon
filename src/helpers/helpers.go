@@ -3,7 +3,8 @@ package helpers
 import (
 	"fmt"
 	"github.com/applauseoss/metronomikon/config"
-	v1beta1 "k8s.io/api/batch/v1beta1"
+	batchv1 "k8s.io/api/batch/v1"
+	batchv1beta1 "k8s.io/api/batch/v1beta1"
 	"strings"
 )
 
@@ -49,14 +50,23 @@ type MetronomeJob struct {
 	} `json:"run"`
 }
 
+type MetronomeJobRun struct {
+	CompletedAt *string  `json:"completedAt"` // we use a pointer so that we can get a null in the JSON if not populated
+	CreatedAt   string   `json:"createdAt"`
+	Id          string   `json:"id"`
+	JobId       string   `json:"jobId"`
+	Status      string   `json:"status"`
+	Tasks       []string `json:"tasks"`
+}
+
 // Convert Kubernetes CronJob to Metronome format
-func JobKubernetesToMetronome(job *v1beta1.CronJob) *MetronomeJob {
+func CronJobKubernetesToMetronome(cronJob *batchv1beta1.CronJob) *MetronomeJob {
 	ret := &MetronomeJob{}
 	cfg := config.GetConfig()
-	ret.Id = fmt.Sprintf("%s.%s", job.ObjectMeta.Namespace, job.ObjectMeta.Name)
+	ret.Id = fmt.Sprintf("%s.%s", cronJob.ObjectMeta.Namespace, cronJob.ObjectMeta.Name)
 	// Metronome only supports a single container, so we grab the first one
 	// XXX: make this configurable?
-	container := job.Spec.JobTemplate.Spec.Template.Spec.Containers[0]
+	container := cronJob.Spec.JobTemplate.Spec.Template.Spec.Containers[0]
 	ret.Run.Docker.Image = container.Image
 	ret.Run.Args = container.Args
 	if len(container.Command) > 0 {
@@ -66,6 +76,28 @@ func JobKubernetesToMetronome(job *v1beta1.CronJob) *MetronomeJob {
 	ret.Run.Mem = cfg.Metronome.JobDefaults.Memory
 	ret.Run.Disk = cfg.Metronome.JobDefaults.Disk
 	ret.Run.Cpus = cfg.Metronome.JobDefaults.Cpus
+	return ret
+}
+
+// Convert Kubernetes Job to Metronome job run format
+func JobKubernetesToMetronome(job *batchv1.Job) *MetronomeJobRun {
+	ret := &MetronomeJobRun{}
+	ret.Id = fmt.Sprintf("%s.%s", job.ObjectMeta.Namespace, job.ObjectMeta.Name)
+	ret.JobId = fmt.Sprintf("%s.%s", job.ObjectMeta.Namespace, job.ObjectMeta.OwnerReferences[0].Name)
+	ret.CreatedAt = job.ObjectMeta.CreationTimestamp.String()
+	if job.Status.StartTime == nil {
+		ret.Status = "STARTING"
+	} else if job.Status.CompletionTime == nil {
+		ret.Status = "RUNNING"
+	} else if job.Status.Failed > 0 {
+		ret.Status = "FAILED"
+	} else {
+		ret.Status = "COMPLETED"
+		// We need a temp var to be able to use the address of it in the assignment below
+		completionTime := job.Status.CompletionTime.String()
+		ret.CompletedAt = &completionTime
+	}
+	ret.Tasks = make([]string, 0)
 	return ret
 }
 
