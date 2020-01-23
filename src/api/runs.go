@@ -2,13 +2,29 @@ package api
 
 import (
 	"fmt"
+
 	"github.com/applauseoss/metronomikon/helpers"
 	"github.com/applauseoss/metronomikon/kube"
 	"github.com/gin-gonic/gin"
 )
 
 func handleGetJobRuns(c *gin.Context) {
-	c.String(200, "TODO")
+	jobId := c.Param("jobid")
+	namespace, cronJobName, err := helpers.SplitMetronomeJobId(jobId)
+	if err != nil {
+		JsonError(c, 500, err.Error())
+		return
+	}
+	jobs, err := kube.GetJobsFromCronJob(namespace, cronJobName)
+	if err != nil {
+		JsonError(c, 500, err.Error())
+		return
+	}
+	res := []helpers.MetronomeJobRun{}
+	for _, job := range jobs {
+		res = append(res, *helpers.JobKubernetesToMetronome(&job))
+	}
+	c.JSON(200, res)
 }
 
 func handleTriggerJobRun(c *gin.Context) {

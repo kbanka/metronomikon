@@ -21,8 +21,18 @@ else:
 
 def compare_structures(data1, data2, use_regex=False):
     if type(data1) != type(data2):
+        if use_regex and isinstance(data1, int) and isinstance(data2, string_types):
+            if re.match(data2, str(data1)) is None:
+                return False
+            return True
         return False
     if isinstance(data1, list):
+        if any(["METRONOMIKON_TEST_REQUIRE_ONE_LIST_MATCH_ONLY" in i for i in data1 + data2]):
+            for idx1 in range(0, len(data1)):
+                for idx2 in range(0, len(data2)):
+                    if compare_structures(data1[idx1], data2[idx2], use_regex=use_regex):
+                        return True
+            return False
         if len(data1) != len(data2):
             return False
         for idx in range(0, len(data1)):
@@ -104,3 +114,4 @@ for step in steps:
         continue
     else:
         sys.exit(1)
+print('Test succeded')
