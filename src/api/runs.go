@@ -22,7 +22,14 @@ func handleGetJobRuns(c *gin.Context) {
 	}
 	res := []helpers.MetronomeJobRun{}
 	for _, job := range jobs {
-		res = append(res, *helpers.JobKubernetesToMetronome(&job))
+		metronomeJobRun := *helpers.JobKubernetesToMetronome(&job)
+		pods, err := kube.GetPods(namespace, "Job")
+		if err != nil {
+			JsonError(c, 500, err.Error())
+			return
+		}
+		metronomeJobRun.Tasks = helpers.MatchKubeJobWithPods(metronomeJobRun.Id, pods)
+		res = append(res, metronomeJobRun)
 	}
 	c.JSON(200, res)
 }
