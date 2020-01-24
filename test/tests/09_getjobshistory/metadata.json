@@ -1,0 +1,13 @@
+{
+	"steps": [
+		{
+			"name": "getjobhistory",
+			"urlPath": "/v1/jobs?embed=history",
+			"method": "GET",
+			"responseCode": 200,
+			"useRegex": true,
+			"responseJsonFile": "response.json",
+			"retries": 60
+		}
+	]
+}

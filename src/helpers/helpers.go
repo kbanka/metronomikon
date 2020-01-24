@@ -2,17 +2,28 @@ package helpers
 
 import (
 	"fmt"
+	"strings"
+	"time"
+
 	"github.com/applauseoss/metronomikon/config"
+	"github.com/applauseoss/metronomikon/kube"
 	batchv1 "k8s.io/api/batch/v1"
 	batchv1beta1 "k8s.io/api/batch/v1beta1"
-	"strings"
+	corev1 "k8s.io/api/core/v1"
 )
+
+// MetronomeErrorMessage supports Metronome API fileds when returning error
+type GinErrorMessage struct {
+	HTTPCode int
+	Message  string `json:"message"`
+}
 
 // Struct for handling parsing/generation of Metronome job JSON schema
 type MetronomeJob struct {
-	Id          string            `json:"id"`
-	Description string            `json:"description,omitempty"`
-	Labels      map[string]string `json:"labels,omitempty"`
+	Id          string               `json:"id"`
+	Description string               `json:"description,omitempty"`
+	History     *MetronomeJobHistory `json:"history,omitempty"`
+	Labels      map[string]string    `json:"labels,omitempty"`
 	Run         struct {
 		Args      []string `json:"args,omitempty"`
 		Artifacts []struct {
@@ -48,6 +59,24 @@ type MetronomeJob struct {
 			Mode          string `json:"mode,omitempty"`
 		} `json:"volumes,omitempty"`
 	} `json:"run"`
+}
+
+// MetronomeJobHistory is used for embeding job history into MetronomeJob
+type MetronomeJobHistory struct {
+	SuccessCount           int                        `json:"successCount"`
+	FailureCount           int                        `json:"failureCount"`
+	LastSuccessAt          *string                    `json:"lastSuccessAt"`
+	LastFailureAt          *string                    `json:"lastFailureAt"`
+	SuccessfulFinishedRuns []MetronomeJobHistoryEntry `json:"successfulFinishedRuns"`
+	FailedFinishedRuns     []MetronomeJobHistoryEntry `json:"failedFinishedRuns"`
+}
+
+// MetronomeJobHistoryEntry represents single metronome job run
+type MetronomeJobHistoryEntry struct {
+	ID         string   `json:"id"`
+	CreatedAt  string   `json:"createdAt"`
+	FinishedAt *string  `json:"finishedAt"`
+	Tasks      []string `json:"tasks"`
 }
 
 type MetronomeJobRun struct {
@@ -99,6 +128,120 @@ func JobKubernetesToMetronome(job *batchv1.Job) *MetronomeJobRun {
 	}
 	ret.Tasks = make([]string, 0)
 	return ret
+}
+
+// GetMaxTime returns larger from given times, first is time
+// second is string, given layout: 2006-01-02 15:04:05.999999999 -0700 MST
+func GetMaxTime(time1 time.Time, time2 string) (*time.Time, error) {
+	dateTimeLayout := "2006-01-02 15:04:05.999999999 -0700 MST"
+	parsedTime2, err := time.Parse(dateTimeLayout, time2)
+	if err != nil {
+		return nil, err
+	}
+	if time1.After(parsedTime2) {
+		return &time1, nil
+	}
+	return &parsedTime2, nil
+}
+
+// HandleGetJobEmbed handles embed parameter in the query
+func HandleGetJobEmbed(embed string, metronomeJob *MetronomeJob) (*MetronomeJob, *GinErrorMessage) {
+	namespace, name, err := SplitMetronomeJobId(metronomeJob.Id)
+	if err != nil {
+		return nil, &GinErrorMessage{HTTPCode: 500, Message: err.Error()}
+	}
+	switch embed {
+	case "history":
+		jobs, err := kube.GetJobsFromCronJob(namespace, name)
+		if err != nil {
+			return nil, &GinErrorMessage{HTTPCode: 500, Message: err.Error()}
+		}
+		pods, err := kube.GetPods(namespace, "Job")
+		if err != nil {
+			return nil, &GinErrorMessage{HTTPCode: 500, Message: err.Error()}
+		}
+		metronomeJob, err = AppendHistoryToMetronomeFromKubeJobs(metronomeJob, jobs, pods)
+		if err != nil {
+			return nil, &GinErrorMessage{HTTPCode: 500, Message: err.Error()}
+		}
+		return metronomeJob, nil
+	case "activeRuns":
+		return nil, &GinErrorMessage{HTTPCode: 200, Message: "TODO"}
+	case "schedules":
+		return nil, &GinErrorMessage{HTTPCode: 200, Message: "TODO"}
+	case "historySummary":
+		return nil, &GinErrorMessage{HTTPCode: 200, Message: "TODO"}
+	}
+	return nil, &GinErrorMessage{
+		HTTPCode: 404,
+		Message:  "Unknown embed options. Valid options are: activeRuns, schedules, history, historySummary"}
+}
+
+// MatchKubeJobWithPods matches pod with its job, assuming jobId is formatted namespace.jobid
+// pased on pods ownerReference
+func MatchKubeJobWithPods(jobId string, pods []corev1.Pod) []string {
+	result := []string{}
+	for _, pod := range pods {
+		for _, ownerReference := range pod.ObjectMeta.GetOwnerReferences() {
+			if fmt.Sprintf("%s.%s", pod.ObjectMeta.Namespace, ownerReference.Name) == jobId {
+				result = append(result, fmt.Sprintf("%s.%s", pod.ObjectMeta.Namespace, pod.Name))
+				break
+			}
+		}
+	}
+	return result
+}
+
+// AppendHistoryToMetronomeFromKubeJobs appends job run history to existing MetronomeJob
+func AppendHistoryToMetronomeFromKubeJobs(metronomeJob *MetronomeJob, kubeJobs []batchv1.Job, pods []corev1.Pod) (*MetronomeJob, error) {
+	failureCount := 0
+	successCount := 0
+	lastSuccessAtTime := time.Unix(0, 0)
+	lastFailureAtTime := time.Unix(0, 0)
+	jobHistory := MetronomeJobHistory{
+		SuccessfulFinishedRuns: []MetronomeJobHistoryEntry{},
+		FailedFinishedRuns:     []MetronomeJobHistoryEntry{}}
+
+	for _, kubeJob := range kubeJobs {
+		metronomeJob := JobKubernetesToMetronome(&kubeJob)
+		jobHistoryEntry := MetronomeJobHistoryEntry{
+			ID:         metronomeJob.Id,
+			CreatedAt:  metronomeJob.CreatedAt,
+			FinishedAt: metronomeJob.CompletedAt,
+			Tasks:      MatchKubeJobWithPods(metronomeJob.Id, pods)}
+
+		switch metronomeJob.Status {
+		case "COMPLETED":
+			jobHistory.SuccessfulFinishedRuns = append(jobHistory.SuccessfulFinishedRuns, jobHistoryEntry)
+			successCount++
+			successAtTime, err := GetMaxTime(lastSuccessAtTime, *jobHistoryEntry.FinishedAt)
+			if err != nil {
+				return nil, err
+			}
+			lastSuccessAtTime = *successAtTime
+		case "FAILED":
+			jobHistory.FailedFinishedRuns = append(jobHistory.FailedFinishedRuns, jobHistoryEntry)
+			failureCount++
+			failureAtTime, err := GetMaxTime(lastSuccessAtTime, *jobHistoryEntry.FinishedAt)
+			if err != nil {
+				return nil, err
+			}
+			lastFailureAtTime = *failureAtTime
+		}
+	}
+
+	jobHistory.SuccessCount = successCount
+	jobHistory.FailureCount = failureCount
+	if successCount > 0 {
+		lastSuccessAtString := lastSuccessAtTime.String()
+		jobHistory.LastSuccessAt = &lastSuccessAtString
+	}
+	if failureCount > 0 {
+		lastFailureAtString := lastFailureAtTime.String()
+		jobHistory.LastFailureAt = &lastFailureAtString
+	}
+	metronomeJob.History = &jobHistory
+	return metronomeJob, nil
 }
 
 // Split Metronome job ID into Kubernetes namespace and job name

@@ -17,6 +17,15 @@
 			"useRegex": true,
 			"retries": 10,
 			"responseJsonFile": "response2.json"
+		},
+		{
+			"name": "runjob_test1_hello1_runsget",
+			"urlPath": "/v1/jobs/metronomikon-test1.hello1/runs",
+			"method": "GET",
+			"responseCode": 200,
+			"useRegex": true,
+			"preserveKeys": true,
+			"responseJsonFile": "response3.json"
 		}
 	]
 }

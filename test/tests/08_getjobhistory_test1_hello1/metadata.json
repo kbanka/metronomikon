@@ -1,0 +1,12 @@
+{
+	"steps": [
+		{
+			"name": "getjobhistory_test1_hello1",
+			"urlPath": "/v1/jobs/metronomikon-test1.hello1?embed=history",
+			"method": "GET",
+			"responseCode": 200,
+			"useRegex": true,
+			"responseJsonFile": "response.json"
+		}
+	]
+}

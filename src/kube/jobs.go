@@ -2,11 +2,13 @@ package kube
 
 import (
 	"fmt"
+	"time"
+
 	appsv1 "k8s.io/api/apps/v1"
 	batchv1 "k8s.io/api/batch/v1"
 	batchv1beta1 "k8s.io/api/batch/v1beta1"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"time"
 )
 
 // Delete specific CronJob
@@ -41,6 +43,41 @@ func GetCronJob(namespace string, name string) (*batchv1beta1.CronJob, error) {
 		return nil, fmt.Errorf("could not get CronJob: %s", err)
 	}
 	return job, nil
+}
+
+// GetPods returns array of pods where owner kind is given
+func GetPods(namespace string, ownerKind string) ([]corev1.Pod, error) {
+	pods, err := client.CoreV1().Pods(namespace).List(metav1.ListOptions{})
+	if err != nil {
+		return nil, fmt.Errorf("could not get pods from job: %s", err)
+	}
+	result := []corev1.Pod{}
+	for _, pod := range pods.Items {
+		for _, ownerReference := range pod.ObjectMeta.GetOwnerReferences() {
+			if ownerReference.Kind == ownerKind {
+				result = append(result, pod)
+				break
+			}
+		}
+	}
+	return result, nil
+}
+
+func GetJobsFromCronJob(namespace string, cronJobName string) ([]batchv1.Job, error) {
+	jobs, err := client.BatchV1().Jobs(namespace).List(metav1.ListOptions{})
+	if err != nil {
+		return nil, fmt.Errorf("could not get jobs from cronjob: %s", err)
+	}
+	res := []batchv1.Job{}
+	for _, job := range jobs.Items {
+		for _, ownerReference := range job.ObjectMeta.GetOwnerReferences() {
+			if ownerReference.Name == cronJobName {
+				res = append(res, job)
+				break
+			}
+		}
+	}
+	return res, nil
 }
 
 // Create Job from CronJob
