@@ -5,7 +5,9 @@
     "id": "metronomikon-test1.hello1-[0-9]+",
     "jobId": "metronomikon-test1.hello1",
     "status": "COMPLETED",
-    "tasks": []
+    "tasks": [
+      "metronomikon-test1.hello1-[0-9]+-.+"
+    ]
   },
   "METRONOMIKON_TEST_REQUIRE_ONE_LIST_MATCH_ONLY"
 ]
