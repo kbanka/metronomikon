@@ -203,14 +203,14 @@ func AppendHistoryToMetronomeFromKubeJobs(metronomeJob *MetronomeJob, kubeJobs [
 		FailedFinishedRuns:     []MetronomeJobHistoryEntry{}}
 
 	for _, kubeJob := range kubeJobs {
-		metronomeJob := JobKubernetesToMetronome(&kubeJob)
+		metronomeJobRun := JobKubernetesToMetronome(&kubeJob)
 		jobHistoryEntry := MetronomeJobHistoryEntry{
-			ID:         metronomeJob.Id,
-			CreatedAt:  metronomeJob.CreatedAt,
-			FinishedAt: metronomeJob.CompletedAt,
-			Tasks:      MatchKubeJobWithPods(metronomeJob.Id, pods)}
+			ID:         metronomeJobRun.Id,
+			CreatedAt:  metronomeJobRun.CreatedAt,
+			FinishedAt: metronomeJobRun.CompletedAt,
+			Tasks:      MatchKubeJobWithPods(metronomeJobRun.Id, pods)}
 
-		switch metronomeJob.Status {
+		switch metronomeJobRun.Status {
 		case "COMPLETED":
 			jobHistory.SuccessfulFinishedRuns = append(jobHistory.SuccessfulFinishedRuns, jobHistoryEntry)
 			successCount++
