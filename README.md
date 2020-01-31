@@ -23,3 +23,5 @@ job "now").
 Unfortunately, it won't be possible to expose the Kubernetes only options through the Metronome API for
 compatibility reasons. It's also possible that some of the Metronome functionality may not be available due
 to an inability to reasonable approximate that behavior in Kubernetes.
+
+One such unsupported Metronome feature, is job "stop" functionality. Kubernetes CronJobs does not support stopping a running CronJob without also deleting the job instance itself, which would in turn destroy history of said job.
