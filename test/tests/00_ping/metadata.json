@@ -1,7 +1,0 @@
-{
-	"name": "ping",
-	"urlPath": "/ping",
-	"method": "GET",
-	"responseCode": 200,
-	"responseText": "pong"
-}

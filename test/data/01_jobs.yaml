@@ -68,6 +68,8 @@ spec:
   schedule: "*/1 * * * *"
   jobTemplate:
     spec:
+      # decreasing from default 6 to speedup testing
+      backoffLimit: 2
       template:
         spec:
           containers:
@@ -76,7 +78,7 @@ spec:
             args:
             - /bin/sh
             - -c
-            - date; echo Hello from the Kubernetes cluster hello4
+            - date; echo Hello from the Kubernetes cluster hello4 - I will now fail; exit 1
           restartPolicy: OnFailure
 ---
 apiVersion: batch/v1beta1
@@ -97,4 +99,24 @@ spec:
             - /bin/sh
             - -c
             - date; echo Hello from the Kubernetes cluster hello5
+          restartPolicy: OnFailure
+---
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: hello6
+  namespace: metronomikon-test4
+spec:
+  schedule: "*/1 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: hello
+            image: busybox
+            args:
+            - /bin/sh
+            - -c
+            - date; echo Hello from the Kubernetes cluster hello6
           restartPolicy: OnFailure

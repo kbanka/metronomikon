@@ -28,17 +28,17 @@ deploy_dashboard_on_k3d() {
 }
 
 deploy_test_resources() {
-  for manifest in ${REPO_DIR}/example/k8s/*.yaml; do
-    ${KUBECTL_CMD} delete -f example/k8s/$(basename $manifest) || true
-  done
-  for manifest in ${REPO_DIR}/example/k8s/*.yaml; do
-    ${KUBECTL_CMD} apply -f example/k8s/$(basename $manifest)
-  done
   for manifest in ${REPO_DIR}/test/data/*.yaml; do
     ${KUBECTL_CMD} delete -f test/data/$(basename $manifest) || true
   done
+  for manifest in ${REPO_DIR}/example/k8s/*.yaml; do
+    ${KUBECTL_CMD} delete -f example/k8s/$(basename $manifest) || true
+  done
   for manifest in ${REPO_DIR}/test/data/*.yaml; do
     ${KUBECTL_CMD} apply -f test/data/$(basename $manifest)
+  done
+  for manifest in ${REPO_DIR}/example/k8s/*.yaml; do
+    ${KUBECTL_CMD} apply -f example/k8s/$(basename $manifest)
   done
 }
 
@@ -46,7 +46,7 @@ wait_for_dashboard_to_be_ready() {
   echo "Waiting for traefik to be ready"
   while ! curl -s 127.0.0.1/ping > /dev/null; do sleep 1; done
   echo "Waiting for api to be ready"
-  while ! curl -s -f 127.0.0.1/v1/ping > /dev/null; do sleep 0.2; done
+  while ! curl -s -f 127.0.0.1/v1/jobs > /dev/null; do sleep 0.2; done
 }
 
 run_tests() {

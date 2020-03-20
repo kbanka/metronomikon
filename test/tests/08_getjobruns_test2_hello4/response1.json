@@ -1,0 +1,11 @@
+[
+  {
+    "completedAt": null,
+    "createdAt": "20.*",
+    "id": "metronomikon-test2.hello4-[0-9]+",
+    "jobId": "metronomikon-test2.hello4",
+    "status": "FAILED",
+    "tasks": []
+  },
+  "METRONOMIKON_TEST_REQUIRE_ONE_LIST_MATCH_ONLY"
+]

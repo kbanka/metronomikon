@@ -10,6 +10,7 @@ data:
         whitelist:
           - metronomikon-test1
           - metronomikon-test2
+          - metronomikon-test3
     metronome:
       jobDefaults:
         memory: 512

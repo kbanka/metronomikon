@@ -110,28 +110,26 @@
   {
     "id": "metronomikon-test2.hello4",
     "history": {
-      "successCount": "[1-9][0-9]*",
-      "failureCount": 0,
-      "lastSuccessAt": "20.*",
-      "lastFailureAt": null,
-      "successfulFinishedRuns": [
+      "successCount": 0,
+      "failureCount": 1,
+      "lastSuccessAt": null,
+      "lastFailureAt": "20.*",
+      "successfulFinishedRuns": [],
+      "failedFinishedRuns": [
         {
           "id": "metronomikon-test2.hello4-[0-9]+",
           "createdAt": "20.*",
-          "finishedAt": "20.*",
-          "tasks": [
-            "metronomikon-test2.hello4-[0-9]+-.+"
-          ]
+          "finishedAt": null,
+          "tasks": []
         },
         "METRONOMIKON_TEST_REQUIRE_ONE_LIST_MATCH_ONLY"
-      ],
-      "failedFinishedRuns": []
+      ]
     },
     "run": {
       "args": [
         "/bin/sh",
         "-c",
-        "date; echo Hello from the Kubernetes cluster hello4"
+        "date; echo Hello from the Kubernetes cluster hello4 - I will now fail; exit 1"
       ],
       "cpus": 1,
       "disk": 5,
