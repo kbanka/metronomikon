@@ -108,6 +108,24 @@ func CronJobKubernetesToMetronome(cronJob *batchv1beta1.CronJob) *MetronomeJob {
 	return ret
 }
 
+func anyJobConditionsFailed(conditions []batchv1.JobCondition) bool {
+	for _, condition := range conditions {
+		if condition.Type == "Failed" && condition.Status == corev1.ConditionTrue {
+			return true
+		}
+	}
+	return false
+}
+
+func firstJobConditionFailedTime(conditions []batchv1.JobCondition) string {
+	for _, condition := range conditions {
+		if condition.Type == "Failed" && condition.Status == corev1.ConditionTrue {
+			return condition.LastTransitionTime.String()
+		}
+	}
+	return "0"
+}
+
 // Convert Kubernetes Job to Metronome job run format
 func JobKubernetesToMetronome(job *batchv1.Job) *MetronomeJobRun {
 	ret := &MetronomeJobRun{}
@@ -116,10 +134,10 @@ func JobKubernetesToMetronome(job *batchv1.Job) *MetronomeJobRun {
 	ret.CreatedAt = job.ObjectMeta.CreationTimestamp.String()
 	if job.Status.StartTime == nil {
 		ret.Status = "STARTING"
+	} else if job.Status.Failed > 0 || anyJobConditionsFailed(job.Status.Conditions) {
+		ret.Status = "FAILED"
 	} else if job.Status.CompletionTime == nil {
 		ret.Status = "RUNNING"
-	} else if job.Status.Failed > 0 {
-		ret.Status = "FAILED"
 	} else {
 		ret.Status = "COMPLETED"
 		// We need a temp var to be able to use the address of it in the assignment below
@@ -177,8 +195,8 @@ func HandleGetJobEmbed(embed string, metronomeJob *MetronomeJob) (*MetronomeJob,
 		Message:  "Unknown embed options. Valid options are: activeRuns, schedules, history, historySummary"}
 }
 
-// MatchKubeJobWithPods matches pod with its job, assuming jobId is formatted namespace.jobid
-// pased on pods ownerReference
+// MatchKubeJobWithPods matches pod with its job
+// assuming jobId is formatted namespace.jobid and used in pod OwnerReference
 func MatchKubeJobWithPods(jobId string, pods []corev1.Pod) []string {
 	result := []string{}
 	for _, pod := range pods {
@@ -222,11 +240,13 @@ func AppendHistoryToMetronomeFromKubeJobs(metronomeJob *MetronomeJob, kubeJobs [
 		case "FAILED":
 			jobHistory.FailedFinishedRuns = append(jobHistory.FailedFinishedRuns, jobHistoryEntry)
 			failureCount++
-			failureAtTime, err := GetMaxTime(lastSuccessAtTime, *jobHistoryEntry.FinishedAt)
-			if err != nil {
-				return nil, err
+			if anyJobConditionsFailed(kubeJob.Status.Conditions) {
+				failureAtTime, err := GetMaxTime(lastFailureAtTime, firstJobConditionFailedTime(kubeJob.Status.Conditions))
+				if err != nil {
+					return nil, err
+				}
+				lastFailureAtTime = *failureAtTime
 			}
-			lastFailureAtTime = *failureAtTime
 		}
 	}
 
