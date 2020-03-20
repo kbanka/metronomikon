@@ -67,7 +67,7 @@ spec:
               containerPort: 8080
           readinessProbe:
             httpGet:
-              path: /ping
+              path: /v1/ping
               port: http
           volumeMounts:
             - name: config-volume
