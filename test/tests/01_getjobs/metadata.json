@@ -2,6 +2,7 @@
 	"name": "getjobs",
 	"urlPath": "/v1/jobs",
 	"method": "GET",
+	"retries": 20,
 	"responseCode": 200,
 	"responseJsonFile": "response.json"
 }
