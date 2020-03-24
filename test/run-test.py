@@ -2,6 +2,7 @@
 
 from __future__ import print_function
 
+import copy
 import json
 import re
 import requests
@@ -35,9 +36,21 @@ def compare_structures(data1, data2, use_regex=False):
             return False
         if len(data1) != len(data2):
             return False
-        for idx in range(0, len(data1)):
-            if not compare_structures(data1[idx], data2[idx], use_regex=use_regex):
-                return False
+        data2 = copy.deepcopy(data2)
+        for idx, var1 in enumerate(data1):
+            # order in list of dicts doesn't matter
+            if isinstance(var1, dict):
+                matchFound = False
+                for var2 in data2:
+                    if compare_structures(var1, var2, use_regex=use_regex):
+                        data2.remove(var2)
+                        matchFound = True
+                        break
+                if not matchFound:
+                    return False
+            else:
+                if not compare_structures(data1[idx], data2[idx], use_regex=use_regex):
+                    return False
     elif isinstance(data2, dict):
         if sorted(data1.keys()) != sorted(data2.keys()):
             return False
