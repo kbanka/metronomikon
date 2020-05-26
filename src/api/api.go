@@ -1,7 +1,9 @@
 package api
 
 import (
+	"encoding/json"
 	"github.com/gin-gonic/gin"
+	"time"
 )
 
 type Api struct {
@@ -19,7 +21,9 @@ func (a *Api) init(debug bool) {
 		gin.SetMode(gin.ReleaseMode)
 	}
 	gin.DisableConsoleColor()
-	a.engine = gin.Default()
+	a.engine = gin.New()
+	a.engine.Use(gin.Recovery())
+	a.engine.Use(gin.LoggerWithFormatter(accessLogger))
 	// Healthcheck
 	a.engine.GET("/ping", handlePing)
 	// Jobs
@@ -50,4 +54,22 @@ func (a *Api) Start() {
 // Output HTTP 500 with JSON body containing error message
 func JsonError(c *gin.Context, statusCode int, message string) {
 	c.JSON(statusCode, gin.H{"message": message})
+}
+
+// Format access log in JSON format
+func accessLogger(param gin.LogFormatterParams) string {
+	logEntry := gin.H{
+		"type":          "access",
+		"client_ip":     param.ClientIP,
+		"timestamp":     param.TimeStamp.Format(time.RFC1123),
+		"method":        param.Method,
+		"path":          param.Path,
+		"proto":         param.Request.Proto,
+		"status_code":   param.StatusCode,
+		"latency":       param.Latency,
+		"user_agent":    param.Request.UserAgent(),
+		"error_message": param.ErrorMessage,
+	}
+	ret, _ := json.Marshal(logEntry)
+	return string(ret) + "\n"
 }
