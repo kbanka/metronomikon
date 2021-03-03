@@ -5,26 +5,30 @@ SERVICE_NAME="metronomikon"
 GOLANG_IMAGE="golang:1.13"
 KUBECTL_IMAGE=${TERRAFORM_IMAGE:-948223650506.dkr.ecr.us-east-1.amazonaws.com/applause/terraform:0.12.19.1}
 KUBECTL_BIN="/usr/local/bin/kubectl"
+K3D_TAG="v4.2.0"
+CLUSTER_NAME="ci-metronomikon"
 
 check_k3d() {
   k3d version || { echo 'k3d does not exist'; exit 1; }
 }
 
 delete_k3d_if_exists() {
-  k3d d || true
+  k3d cluster delete ${CLUSTER_NAME}|| true
 }
 
 deploy_k3d() {
-  k3d shell -c 'true' || (delete_k3d_if_exists ; k3d create --publish 80:80)
+  # if it's stopped or doesn't exist try do delete it and create
+  (k3d cluster list  | grep -e "${CLUSTER_NAME}[ ]*1") || (delete_k3d_if_exists ; k3d cluster create -p 80:80@loadbalancer ${CLUSTER_NAME})
 }
 
 deploy_dashboard_on_k3d() {
   make image
   # wait for k3s to start
-  while ! k3d get-kubeconfig --name='k3s-default' 2>&1 > /dev/null; do sleep 1; done
-  export KUBECONFIG="$(k3d get-kubeconfig --name='k3s-default')"
-  export KUBECTL_CMD="docker run --rm -v ${REPO_DIR}:/code -v $(dirname $KUBECONFIG):/root/.kube -e KUBECONFIG=/root/.kube/kubeconfig.yaml -w /code --entrypoint=${KUBECTL_BIN} --network=host ${KUBECTL_IMAGE}"
-  k3d import-images applause/${SERVICE_NAME}:latest
+  while ! k3d kubeconfig get ${CLUSTER_NAME} 2>&1 > /dev/null; do sleep 1; done
+  k3d kubeconfig get ${CLUSTER_NAME} > ${PWD}/kubeconfig
+  export KUBECONFIG="${PWD}/kubeconfig"
+  export KUBECTL_CMD="docker run --rm -v ${REPO_DIR}:/code -v $(dirname $KUBECONFIG):/root/.kube -e KUBECONFIG=/root/.kube/kubeconfig -w /code --entrypoint=${KUBECTL_BIN} --network=host ${KUBECTL_IMAGE}"
+  k3d image import -c ${CLUSTER_NAME} applause/${SERVICE_NAME}:latest
 }
 
 deploy_test_resources() {
