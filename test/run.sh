@@ -32,6 +32,7 @@ deploy_metronomikon() {
 	cat ${BASEDIR}/../example/k8s/kube-manifest.yaml | sed -e "s/kube-system/${TEST_NAMESPACE}/" > ${TMPDIR}/deploy.yaml
 	kubectl apply -f ${TMPDIR}/deploy.yaml || die "failed to deploy metronomikon"
 	kubectl rollout status --timeout 30s --watch -n ${TEST_NAMESPACE} deployment/metronomikon || die "failed to deploy metronomikon"
+	kubectl apply -f ${BASEDIR}/../example/k8s/metronomikon-ingress.yaml
 }
 
 cleanup_test_data() {
@@ -41,15 +42,9 @@ cleanup_test_data() {
 	done
 }
 
-get_endpoint() {
-	ENDPOINT="http://$(kubectl get svc -n ${TEST_NAMESPACE} metronomikon -o json | jq -r '.spec.clusterIP'):8080"
-}
-
 run_tests() {
-	get_endpoint
-	for i in $(ls -1 ${BASEDIR}/tests | sort); do
-		${BASEDIR}/run-test.py ${ENDPOINT} ${BASEDIR}/tests/${i} || die "test step failed"
-	done
+	cd ${BASEDIR}
+	behave
 }
 
 main() {

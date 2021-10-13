@@ -8,6 +8,10 @@
 # Test binary, build with `go test -c`
 *.test
 
+# Tests
+__pycache__/
+.virtualenv/
+
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
 
