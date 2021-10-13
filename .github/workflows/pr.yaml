@@ -1,0 +1,11 @@
+name: PR checks
+on:
+  pull_request:
+    branches:
+      - master
+jobs:
+  Run-CI-Script:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - run: ci/pr.sh
