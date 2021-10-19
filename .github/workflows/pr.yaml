@@ -8,4 +8,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          # TODO: bump to 3.8+ once behave>=1.2.7 is released
+          # https://github.com/behave/behave/issues/755
+          python-version: '3.7'
       - run: ci/pr.sh
