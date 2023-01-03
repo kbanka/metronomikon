@@ -56,7 +56,9 @@ main() {
 
 	test_kubectl
 	populate_test_data
+	sleep 5
 	deploy_metronomikon
+	sleep 5
 	run_tests
 }
 
