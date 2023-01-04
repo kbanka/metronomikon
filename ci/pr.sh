@@ -1,6 +1,6 @@
 #!/bin/bash
 
-K3S_IMAGE_TAG="v1.18.19-k3s1"
+K3S_IMAGE_TAG="v1.21.10-k3s1"
 K3D_VERSION=4.4.8
 CLUSTER_NAME=metronomikon-ci
 
