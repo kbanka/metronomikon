@@ -29,5 +29,4 @@ jobs:
           version: v1.50.1 # current version at time of commit
           # Optional: golangci-lint command line arguments.
           # args: --issues-exit-code=0
-          only-new-issues: true
           working-directory: src
