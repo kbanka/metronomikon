@@ -38,5 +38,5 @@ func main() {
 		}
 	}
 	a := api.New(debug)
-	a.Start()
+	_ = a.Start()
 }

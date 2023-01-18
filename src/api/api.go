@@ -47,8 +47,8 @@ func (a *Api) init(debug bool) {
 	a.engine.GET("/v1/metrics", handleGetMetrics)
 }
 
-func (a *Api) Start() {
-	a.engine.Run()
+func (a *Api) Start() error {
+	return a.engine.Run()
 }
 
 // Output HTTP 500 with JSON body containing error message
