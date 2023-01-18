@@ -30,3 +30,4 @@ jobs:
           # Optional: golangci-lint command line arguments.
           # args: --issues-exit-code=0
           only-new-issues: true
+          working-directory: src
