@@ -1,12 +1,12 @@
 package kube
 
 import (
+	"context"
 	"fmt"
 	"time"
 
 	appsv1 "k8s.io/api/apps/v1"
 	batchv1 "k8s.io/api/batch/v1"
-	batchv1beta1 "k8s.io/api/batch/v1beta1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -15,12 +15,12 @@ import (
 // Returns nil and error when job doesn't exist
 // Return job and error when deleting job failed
 // Return job and nil when deletion succeeded
-func DeleteCronJob(namespace string, name string) (*batchv1beta1.CronJob, error) {
+func DeleteCronJob(namespace string, name string) (*batchv1.CronJob, error) {
 	job, err := GetCronJob(namespace, name)
 	if err != nil {
 		return nil, err
 	}
-	err = client.BatchV1beta1().CronJobs(namespace).Delete(name, &metav1.DeleteOptions{})
+	err = client.BatchV1beta1().CronJobs(namespace).Delete(context.TODO(), name, metav1.DeleteOptions{})
 	if err != nil {
 		return job, err
 	}
@@ -28,8 +28,8 @@ func DeleteCronJob(namespace string, name string) (*batchv1beta1.CronJob, error)
 }
 
 // Return all CronJobs in a namespace
-func GetCronJobs(namespace string) ([]batchv1beta1.CronJob, error) {
-	jobs, err := client.BatchV1beta1().CronJobs(namespace).List(metav1.ListOptions{})
+func GetCronJobs(namespace string) ([]batchv1.CronJob, error) {
+	jobs, err := client.BatchV1().CronJobs(namespace).List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		return nil, fmt.Errorf("could not list CronJobs: %s", err)
 	}
@@ -37,8 +37,8 @@ func GetCronJobs(namespace string) ([]batchv1beta1.CronJob, error) {
 }
 
 // Return specific CronJob
-func GetCronJob(namespace string, name string) (*batchv1beta1.CronJob, error) {
-	job, err := client.BatchV1beta1().CronJobs(namespace).Get(name, metav1.GetOptions{})
+func GetCronJob(namespace string, name string) (*batchv1.CronJob, error) {
+	job, err := client.BatchV1().CronJobs(namespace).Get(context.TODO(), name, metav1.GetOptions{})
 	if err != nil {
 		return nil, fmt.Errorf("could not get CronJob: %s", err)
 	}
@@ -47,7 +47,7 @@ func GetCronJob(namespace string, name string) (*batchv1beta1.CronJob, error) {
 
 // GetPods returns array of pods where owner kind is given
 func GetPods(namespace string, ownerKind string) ([]corev1.Pod, error) {
-	pods, err := client.CoreV1().Pods(namespace).List(metav1.ListOptions{})
+	pods, err := client.CoreV1().Pods(namespace).List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		return nil, fmt.Errorf("could not get pods from job: %s", err)
 	}
@@ -64,7 +64,7 @@ func GetPods(namespace string, ownerKind string) ([]corev1.Pod, error) {
 }
 
 func GetJobsFromCronJob(namespace string, cronJobName string) ([]batchv1.Job, error) {
-	jobs, err := client.BatchV1().Jobs(namespace).List(metav1.ListOptions{})
+	jobs, err := client.BatchV1().Jobs(namespace).List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		return nil, fmt.Errorf("could not get jobs from cronjob: %s", err)
 	}
@@ -81,7 +81,7 @@ func GetJobsFromCronJob(namespace string, cronJobName string) ([]batchv1.Job, er
 }
 
 // Create Job from CronJob
-func CreateJobFromCronjob(cronJob *batchv1beta1.CronJob) (*batchv1.Job, error) {
+func CreateJobFromCronjob(cronJob *batchv1.CronJob) (*batchv1.Job, error) {
 	// This duplicates the logic used by kubectl to create a Job from a CronJob
 	annotations := make(map[string]string)
 	annotations["cronjob.kubernetes.io/instantiate"] = "manual"
@@ -102,7 +102,7 @@ func CreateJobFromCronjob(cronJob *batchv1beta1.CronJob) (*batchv1.Job, error) {
 		Spec: cronJob.Spec.JobTemplate.Spec,
 	}
 
-	if job, err := client.BatchV1().Jobs(cronJob.ObjectMeta.Namespace).Create(jobDef); err != nil {
+	if job, err := client.BatchV1().Jobs(cronJob.ObjectMeta.Namespace).Create(context.TODO(), jobDef, metav1.CreateOptions{}); err != nil {
 		return nil, err
 	} else {
 		return job, nil
@@ -111,7 +111,7 @@ func CreateJobFromCronjob(cronJob *batchv1beta1.CronJob) (*batchv1.Job, error) {
 
 // Return specific Job
 func GetJob(namespace string, name string) (*batchv1.Job, error) {
-	job, err := client.BatchV1().Jobs(namespace).Get(name, metav1.GetOptions{})
+	job, err := client.BatchV1().Jobs(namespace).Get(context.TODO(), name, metav1.GetOptions{})
 	if err != nil {
 		return nil, fmt.Errorf("could not get Job: %s", err)
 	}
