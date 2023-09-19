@@ -8,7 +8,6 @@ import (
 	"github.com/applauseoss/metronomikon/config"
 	"github.com/applauseoss/metronomikon/kube"
 	batchv1 "k8s.io/api/batch/v1"
-	batchv1beta1 "k8s.io/api/batch/v1beta1"
 	corev1 "k8s.io/api/core/v1"
 )
 
@@ -89,7 +88,7 @@ type MetronomeJobRun struct {
 }
 
 // Convert Kubernetes CronJob to Metronome format
-func CronJobKubernetesToMetronome(cronJob *batchv1beta1.CronJob) *MetronomeJob {
+func CronJobKubernetesToMetronome(cronJob *batchv1.CronJob) *MetronomeJob {
 	ret := &MetronomeJob{}
 	cfg := config.GetConfig()
 	ret.Id = fmt.Sprintf("%s.%s", cronJob.ObjectMeta.Namespace, cronJob.ObjectMeta.Name)
