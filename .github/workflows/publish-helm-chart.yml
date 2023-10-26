@@ -1,0 +1,33 @@
+name: publish-helm-chart
+
+on:
+  push:
+    branches: ['master']
+
+concurrency: ${{ github.ref }}
+
+jobs:
+  build-and-push-helm-chart:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install Helm
+        uses: azure/setup-helm@v3
+      - name: Package and upload chart
+        shell: bash
+        env:
+          REGISTRY: "ghcr.io"
+          REPOSITORY: "${{ github.repository }}"
+          TOKEN: "${{ github.token }}"
+          USER: "${{ github.actor }}"
+        run: |
+          rm -rf dist
+          mkdir dist
+          helm package helm/ -d dist/
+          echo "${TOKEN}" | helm registry login "${REGISTRY}/${REPOSITORY}" -u "${USER}" --password-stdin
+          for file in dist/*; do
+            helm push "$file" "oci://${REGISTRY}/${REPOSITORY}/charts"
+          done

@@ -17,3 +17,6 @@ __pycache__/
 
 # Binary
 src/metronomikon
+
+# Distribution directory
+/dist/
