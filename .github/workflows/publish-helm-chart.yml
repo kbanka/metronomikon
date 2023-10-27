@@ -2,7 +2,7 @@ name: publish-helm-chart
 
 on:
   push:
-    branches: ['master']
+    branches: ['master', 'troubleshoot']
 
 concurrency: ${{ github.ref }}
 
